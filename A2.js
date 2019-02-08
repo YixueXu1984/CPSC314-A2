@@ -130,6 +130,7 @@ var bunnyPosition = {  type: 'v3',  value: new THREE.Vector3(0.0,-0.3,-3)};
 var lightPosition = {  type: 'v3',  value: new THREE.Vector3(0, 0, 0)};
 var eggPosition = {  type: 'v3',  value: new THREE.Vector3(0.0, 0.3, -5.0)};
 
+
 // Used for both (A) & (B)
 var armadilloMaterial = new THREE.ShaderMaterial({
   uniforms: {
@@ -141,7 +142,8 @@ var armadilloMaterial = new THREE.ShaderMaterial({
 var bunnyMaterial = new THREE.ShaderMaterial({
   uniforms: {
     bunnyPosition: bunnyPosition,
-    lightPosition: lightPosition
+    lightPosition: lightPosition,
+      armadilloPosition: armadilloPosition
   }
 });
 
@@ -154,14 +156,37 @@ var eggMaterial = new THREE.ShaderMaterial({
 // used only for (B)
 var leftEyeMaterial = new THREE.ShaderMaterial({
 	uniforms: {
-    offset: {type: 'v3', value: new THREE.Vector3(-0.15, 2.42, -0.64)}
+    offset: {type: 'v3', value: new THREE.Vector3(-0.15, 2.42, -0.64)},
+        armadilloPosition: armadilloPosition,
+        eggPosition: eggPosition
 	}
-})
+});
 var rightEyeMaterial = new THREE.ShaderMaterial({
 	uniforms: {
-    offset: {type: 'v3', value: new THREE.Vector3(0.15, 2.42, -0.64)}
+    offset: {type: 'v3', value: new THREE.Vector3(0.15, 2.42, -0.64)},
+        armadilloPosition: armadilloPosition,
+        eggPosition: eggPosition
 	}
-})
+});
+
+var leftLaserMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        offset: {type: 'v3', value: new THREE.Vector3(-0.15, 2.42, -0.64)},
+        eggPosition: eggPosition,
+        armadilloPosition: armadilloPosition
+
+    }
+});
+
+var rightLaserMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        offset: {type: 'v3', value: new THREE.Vector3(0.15, 2.42, -0.64)},
+        eggPosition: eggPosition,
+        armadilloPosition: armadilloPosition
+
+    }
+});
+
 
 // used only in (C)
 var shakeBunnyMaterial = new THREE.ShaderMaterial({
@@ -182,7 +207,9 @@ var shaderFiles = [
   'glsl/eye.vs.glsl',
   'glsl/eye.fs.glsl',
   'glsl/shake_bunny.vs.glsl',
-  'glsl/shake_bunny.fs.glsl'
+  'glsl/shake_bunny.fs.glsl',
+  'glsl/laser.vs.glsl',
+  'glsl/laser.fs.glsl'
 ];
 
 new THREE.SourceLoader().load(shaderFiles, function(shaders) {
@@ -195,14 +222,20 @@ new THREE.SourceLoader().load(shaderFiles, function(shaders) {
   eggMaterial.vertexShader = shaders['glsl/egg.vs.glsl'];
   eggMaterial.fragmentShader = shaders['glsl/egg.fs.glsl'];
 
-  leftEyeMaterial.vertexShader = shaders['glsl/eye.vs.glsl']
-  leftEyeMaterial.fragmentShader = shaders['glsl/eye.fs.glsl']
+  leftEyeMaterial.vertexShader = shaders['glsl/eye.vs.glsl'];
+  leftEyeMaterial.fragmentShader = shaders['glsl/eye.fs.glsl'];
 
-  rightEyeMaterial.vertexShader = shaders['glsl/eye.vs.glsl']
-  rightEyeMaterial.fragmentShader = shaders['glsl/eye.fs.glsl']
+  rightEyeMaterial.vertexShader = shaders['glsl/eye.vs.glsl'];
+  rightEyeMaterial.fragmentShader = shaders['glsl/eye.fs.glsl'];
 
   shakeBunnyMaterial.vertexShader = shaders['glsl/shake_bunny.vs.glsl'];
   shakeBunnyMaterial.fragmentShader = shaders['glsl/shake_bunny.fs.glsl'];
+
+   leftLaserMaterial.vertexShader = shaders['glsl/laser.vs.glsl'];
+   leftLaserMaterial.fragmentShader = shaders['glsl/laser.fs.glsl'];
+
+   rightLaserMaterial.vertexShader = shaders['glsl/laser.vs.glsl'];
+   rightLaserMaterial.fragmentShader = shaders['glsl/laser.fs.glsl'];
 })
 
 //---------------------------
@@ -237,7 +270,7 @@ scenes[Part.PROTECT].add(protect.egg);
 loadOBJ(Part.LASERS, 'obj/armadillo.obj', armadilloMaterial, 1, 0, 0, 0, 0, 0, 0); // Armadillo
 loadOBJ(Part.LASERS,'obj/bunny.obj', bunnyMaterial, 1, 0, 0 , 0, 0 ,0 ,0);
 
-laser = {}
+laser = {};
 // Lightbulb
 laser.lightbulbMaterial = new THREE.MeshBasicMaterial()
 laser.lightbulbMaterial.color = new THREE.Color(1, 1, 0)
@@ -263,6 +296,12 @@ laser.laserGeometry = new THREE.CylinderGeometry(0.02, 0.02, 1, 16)
 for (let i = 0; i < laser.laserGeometry.vertices.length; ++i)
   laser.laserGeometry.vertices[i].y += 0.5
 
+var leftLaser = new THREE.Mesh(laser.laserGeometry, leftLaserMaterial);
+scenes[Part.LASERS].add(leftLaser);
+
+var rightLaser = new THREE.Mesh(laser.laserGeometry, rightLaserMaterial);
+scenes[Part.LASERS].add(rightLaser);
+
 //---------------------------
 // (C) - SHAKE SCENE OBJECTS
 // WORK HERE FOR PART 1.C
@@ -280,17 +319,21 @@ function checkKeyboard() {
     mode = Part.SHAKE;
 
   if (mode == Part.PROTECT) {
-    if (keyboard.pressed("A"))
-      armadilloPosition.value.x -= 0.1;
-    else if (keyboard.pressed("D"))
-      armadilloPosition.value.x += 0.1;
+    if (keyboard.pressed("A")) {
+        armadilloPosition.value.x -= 0.1;
+    }
+    else if (keyboard.pressed("D")) {
+        armadilloPosition.value.x += 0.1;
+    }
     lightPosition.value = protect.lightbulb.position
   }
   else if (mode == Part.LASERS) {
-    if (keyboard.pressed("A"))
-      armadilloPosition.value.x -= 0.1;
-    else if (keyboard.pressed("D"))
-      armadilloPosition.value.x += 0.1;
+    if (keyboard.pressed("A")) {
+        armadilloPosition.value.x -= 0.1;
+    }
+    else if (keyboard.pressed("D")) {
+        armadilloPosition.value.x += 0.1;
+    }
     lightPosition.value = laser.lightbulb.position
   }
   else if (mode == Part.SHAKE) {
@@ -306,6 +349,9 @@ function checkKeyboard() {
   eggMaterial.needsUpdate = true;
   bunnyMaterial.needsUpdate = true;
   armadilloMaterial.needsUpdate = true; // Tells three.js that some uniforms might have changed
+  leftLaserMaterial.needsUpdate = true;
+  rightLaserMaterial.needsUpdate = true;
+
 }
 
 // SETUP UPDATE CALL-BACK
