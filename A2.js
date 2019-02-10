@@ -124,12 +124,13 @@ window.onscroll = function () {
 
 // MATERIALS: specifying uniforms and shaders
 
-var rot_angle = { type: 'f', value: 0.0 }
+var rot_angle = { type: 'f', value: 0.0 };
 var armadilloPosition = { type: 'v3', value: new THREE.Vector3(0.0,1.0,0.0)};
 var bunnyPosition = {  type: 'v3',  value: new THREE.Vector3(0.0,-0.3,-3)};
 var lightPosition = {  type: 'v3',  value: new THREE.Vector3(0, 0, 0)};
 var eggPosition = {  type: 'v3',  value: new THREE.Vector3(0.0, 0.3, -5.0)};
 
+var lookAtLight = {type: 'f', value: 0.0};
 
 // Used for both (A) & (B)
 var armadilloMaterial = new THREE.ShaderMaterial({
@@ -150,6 +151,7 @@ var bunnyMaterial = new THREE.ShaderMaterial({
 var eggMaterial = new THREE.ShaderMaterial({
   uniforms: {
     lightPosition: lightPosition,
+      eggPosition: eggPosition
   }
 });
 
@@ -173,7 +175,9 @@ var leftLaserMaterial = new THREE.ShaderMaterial({
     uniforms: {
         offset: {type: 'v3', value: new THREE.Vector3(-0.15, 2.42, -0.64)},
         eggPosition: eggPosition,
-        armadilloPosition: armadilloPosition
+        armadilloPosition: armadilloPosition,
+        lookAtLight: lookAtLight,
+        bunnyPosition:bunnyPosition
 
     }
 });
@@ -182,7 +186,9 @@ var rightLaserMaterial = new THREE.ShaderMaterial({
     uniforms: {
         offset: {type: 'v3', value: new THREE.Vector3(0.15, 2.42, -0.64)},
         eggPosition: eggPosition,
-        armadilloPosition: armadilloPosition
+        armadilloPosition: armadilloPosition,
+        lookAtLight: lookAtLight,
+        bunnyPosition:bunnyPosition
 
     }
 });
@@ -333,6 +339,10 @@ function checkKeyboard() {
     }
     else if (keyboard.pressed("D")) {
         armadilloPosition.value.x += 0.1;
+    }
+
+    else if (keyboard.pressed("L"))  {
+        lookAtLight.value = 1.0;
     }
     lightPosition.value = laser.lightbulb.position
   }

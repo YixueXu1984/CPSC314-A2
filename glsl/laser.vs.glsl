@@ -1,6 +1,8 @@
 uniform vec3 eggPosition;
 uniform vec3 armadilloPosition;
 uniform vec3 offset;
+uniform float lookAtLight;
+uniform vec3 bunnyPosition;
 
 
 void main() {
@@ -39,5 +41,25 @@ void main() {
                                vec4(zVector,0.0),
                                vec4(0.0, 0.0, 0.0, 1.0));
 
+float scaleB = length((bunnyPosition + armadilloPosition/2.0) - eyePosition);
+
+    mat4 scaleMatrixB = mat4(vec4(1.0, 0.0, 0.0, 0.0),
+                            vec4(0.0, scaleB, 0.0, 0.0),
+                            vec4(0.0, 0.0, 1.0, 0.0),
+                            vec4(0.0, 0.0, 0.0, 1.0));
+
+                                         vec3 zVectorL = normalize(eyePosition - (bunnyPosition + armadilloPosition/2.0));
+                                         vec3 xVectorL = normalize(cross(up,zVectorL));
+                                         vec3 yVectorL = normalize(cross(zVectorL, xVectorL));
+
+                                     mat4 lookAtMatrixL = mat4(vec4(xVectorL,0.0),
+                                                              vec4(yVectorL,0.0),
+                                                              vec4(zVectorL,0.0),
+                                                              vec4(0.0, 0.0, 0.0, 1.0));
+
+if (lookAtLight >0.5) {
+gl_Position = projectionMatrix * modelViewMatrix * T *  lookAtMatrixL *    xR *  scaleMatrixB *  vec4(position, 1.0);
+} else {
     gl_Position = projectionMatrix * modelViewMatrix * T * lookAtMatrix  *  xR *  scaleMatrix *  vec4(position, 1.0);
+    }
 }

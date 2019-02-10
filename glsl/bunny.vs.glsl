@@ -49,6 +49,7 @@ void main() {
     // Translation matrix
     mat4 T = mat4(1.0);
     T[3].xyz = bunnyPosition;
+    T[3].x = bunnyPosition.x + armadilloPosition.x/2.0;
 
     gl_Position = projectionMatrix * viewMatrix * T * S * R * vec4(position, 1.0);
 }
